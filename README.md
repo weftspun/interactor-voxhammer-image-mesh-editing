@@ -2,9 +2,10 @@
 
 Model image for `voxhammer_image_mesh_editing`, per
 [weftspun's RFD 0036](https://github.com/weftspun/request-for-discussion/tree/main/0036-packaging-convention)
-+ [RFD 0037](https://github.com/weftspun/request-for-discussion/tree/main/0037-composite-models-as-taskweft-domains)
-(composite models as taskweft domains). Facts from
-[RFD 0048](https://github.com/weftspun/request-for-discussion/tree/main/0048-voxhammer-image-mesh-editing).
+
+- [RFD 0037](https://github.com/weftspun/request-for-discussion/tree/main/0037-composite-models-as-taskweft-domains)
+  (composite models as taskweft domains). Facts from
+  [RFD 0048](https://github.com/weftspun/request-for-discussion/tree/main/0048-voxhammer-image-mesh-editing).
 
 ## This shares RFD 0047's domain
 
@@ -24,23 +25,23 @@ geometry back outside the mask first. The domain states this as a hard guard
 
 ## Model
 
-| Property | Value |
-|---|---|
-| Upstream | [Nelipot-Lee/VoxHammer](https://github.com/Nelipot-Lee/VoxHammer) (3DV 2026 Oral), on [microsoft/TRELLIS.2](https://github.com/microsoft/TRELLIS.2)'s backbone |
-| License | MIT — independently checked, matches RFD 0047/0048 (VoxHammer's own code; TRELLIS.2's code it depends on carries its own MIT license too) |
-| Parameters | 0 — shares [`interactor-trellis2-image-to-textured-mesh`](https://github.com/weftspun/interactor-trellis2-image-to-textured-mesh)'s weights |
-| bf16 | 8.0 GB, the RFD 0038 cost |
+| Property   | Value                                                                                                                                                          |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Upstream   | [Nelipot-Lee/VoxHammer](https://github.com/Nelipot-Lee/VoxHammer) (3DV 2026 Oral), on [microsoft/TRELLIS.2](https://github.com/microsoft/TRELLIS.2)'s backbone |
+| License    | MIT — independently checked, matches RFD 0047/0048 (VoxHammer's own code; TRELLIS.2's code it depends on carries its own MIT license too)                      |
+| Parameters | 0 — shares [`interactor-trellis2-image-to-textured-mesh`](https://github.com/weftspun/interactor-trellis2-image-to-textured-mesh)'s weights                    |
+| bf16       | 8.0 GB, the RFD 0038 cost                                                                                                                                      |
 
 ## Interface
 
 `POST /predict`:
 
-| Input | Type | Default | Note |
-|---|---|---|---|
-| `mesh` | Path/URL/base64 | required | |
+| Input       | Type            | Default  | Note                                                                      |
+| ----------- | --------------- | -------- | ------------------------------------------------------------------------- |
+| `mesh`      | Path/URL/base64 | required |                                                                           |
 | `reference` | Path/URL/base64 | required | An image — conditions the edit, replacing RFD 0047's `instruction` string |
-| `region` | Path/URL/base64 | required | A mask — see `decisions/api/api.md`'s supported mask list |
-| `seed` | int | -1 | |
+| `region`    | Path/URL/base64 | required | A mask — see `decisions/api/api.md`'s supported mask list                 |
+| `seed`      | int             | -1       |                                                                           |
 
 Returns `{layer, plan, seed, stub}` — `layer` is the edit sublayer (RFD 0053: muting it returns
 the original mesh unchanged), `plan` is the step list actually executed, included so a caller
