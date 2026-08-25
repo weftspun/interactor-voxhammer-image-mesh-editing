@@ -82,6 +82,26 @@ def _run_plan(state: dict) -> None:
         )
 
 
+def _write_edited(work: Path) -> Path:
+    """The decoded mesh a_decode's handle names, /work/edited.usdc.
+
+    In stub mode this is a real, empty crate rather than four bytes that spell
+    something crate-like. It wrote b"PSDC" + b"stub", which is not the "PXR-USDC"
+    a crate starts with, so USD refused the file the returned layer points at:
+    every consumer got a layer whose sourceAsset could not open.
+    """
+    edited = work / "edited.usdc"
+    from pxr import Usd, UsdGeom
+
+    stage = Usd.Stage.CreateNew(str(edited))
+    UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.y)
+    UsdGeom.SetStageMetersPerUnit(stage, 1.0)
+    asset = UsdGeom.Xform.Define(stage, "/Asset")
+    stage.SetDefaultPrim(asset.GetPrim())
+    stage.GetRootLayer().Save()
+    return edited
+
+
 def _to_usd(edited: Path, work: Path) -> Path:
     """RFD 0053: the edit is a sublayer over the source mesh, not a flat
     file -- muting this layer returns the original."""
@@ -116,12 +136,19 @@ def predict(job_input: dict) -> dict:
     state = {"mode": {"conditioning": "image"}}
     _run_plan(state)
 
-    edited = work / "edited.usdc"
-    edited.write_bytes(bytes([0x50, 0x53, 0x44, 0x43]) + b"stub" if STUB else b"")
+    edited = _write_edited(work)
     layer = _to_usd(edited, work)
 
+    # The mesh travels with the layer. RFD 0053's rule -- muting the layer
+    # returns the original -- needs the original to be there to return to, and
+    # the layer's sourceAsset is a relative path into a temp directory the
+    # caller never sees. Returning only the layer shipped a reference that
+    # could not resolve anywhere but on this machine, for as long as the
+    # directory survived.
     return {
         "layer": _encode(layer),
+        "mesh": _encode(edited),
+        "mesh_name": edited.name,
         "plan": PLAN,
         "seed": args["seed"],
         "stub": STUB,

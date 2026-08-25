@@ -4,3 +4,38 @@ repos:
     hooks:
       - id: prettier
         types: [markdown]
+
+  # The order of operations lives in domain.ex, and `server.py`'s PLAN is a Python list a
+  # hand can reorder. Reordering it is not a crash: a_decode before a_splice returns a mesh
+  # with vertices moved outside the region the caller selected, which reads as a model that
+  # is slightly worse rather than as a bug. The gate executes PLAN against the domain's own
+  # preconditions, so the rule is checked where it is already written rather than restated
+  # in a third place.
+  #
+  # It also opens the stub's payload, which is what it was written for: `edited.usdc` was
+  # four bytes spelling "PSDC" where a crate begins "PXR-USDC", so the returned layer
+  # pointed at a file USD refuses -- inside a 200 response that looked fine.
+  #
+  # `usd-core` is pinned for the reason the logbook's `usd-valid` hook records: what the
+  # runtime accepts is what decides pass or fail, and a version bump should arrive as a
+  # diff somebody approves rather than as a red run on an unrelated pull request.
+  - repo: local
+    hooks:
+      - id: plan-order
+        name: the dispatcher follows the domain's guards, and the payload opens
+        entry: python check_plan_order.py
+        language: python
+        additional_dependencies: ["usd-core==26.8"]
+        files: ^(server\.py|domain\.ex|plan\.ex|problem\.ex|check_plan_order\.py)$
+        pass_filenames: false
+
+      # Nine controls, each asserting the message it expects. Asserting only that something
+      # failed was not enough: every plan mutation was being rejected by the plans-agree
+      # check before the guard simulation ran, so the guard had no control at all.
+      - id: plan-order-self-test
+        name: the gate still fails on a swapped splice and a payload that will not open
+        entry: python check_plan_order.py --self-test
+        language: python
+        additional_dependencies: ["usd-core==26.8"]
+        files: ^check_plan_order\.py$
+        pass_filenames: false
