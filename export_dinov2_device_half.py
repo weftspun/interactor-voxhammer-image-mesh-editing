@@ -12,6 +12,7 @@ import collections
 import importlib.util
 import os
 import sys
+import tempfile
 
 RESOLUTION = 518
 PATCH = 14
@@ -92,7 +93,8 @@ def self_test(gate):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="dinov2_vitl14_reg_518.onnx")
+    ap.add_argument("--out", default=os.path.join(tempfile.gettempdir(),
+                                              "dinov2_vitl14_reg_518.onnx"))
     ap.add_argument("--gate", default=default_gate())
     ap.add_argument("--model", default="dinov2_vitl14_reg")
     ap.add_argument("--opset", type=int, default=17)
