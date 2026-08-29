@@ -1,1 +1,3 @@
 __pycache__/
+# 1.2 GB, and reproducible from the checkpoint by the script beside it.
+*.onnx
